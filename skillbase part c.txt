@@ -1,0 +1,76 @@
+server 
+
+
+import socket
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+# Create a socket object
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Bind the socket to a specific address and port
+server_address = ('localhost', 8080)
+server_socket.bind(server_address)
+
+print('Server is listening on {}:{}'.format(*server_address))
+
+while True:
+    # Receive data from the client
+    data, client_address = server_socket.recvfrom(1024)
+    number = int(data.decode())
+
+    # Check if the number is prime
+    result = is_prime(number)
+
+    # Send the result back to the client
+    response = str(result).encode()
+    server_socket.sendto(response, client_address)
+
+
+
+
+client
+import threading
+
+class FibonacciThread(threading.Thread):
+    def run(self):
+        a, b = 0, 1
+        print("Fibonacci Series:")
+        print(a)
+        while b <= 10000:
+            print(b)
+            a, b = b, a + b
+
+class SquareThread(threading.Thread):
+    def run(self):
+        print("Square Numbers:")
+        for num in range(1, 10001):
+            print(num**2)
+
+class CubeThread(threading.Thread):
+    def run(self):
+        print("Cube Numbers:")
+        for num in range(1, 10001):
+            print(num**3)
+
+# Create and start the threads
+fib_thread = FibonacciThread()
+sq_thread = SquareThread()
+cube_thread = CubeThread()
+
+fib_thread.start()
+sq_thread.start()
+cube_thread.start()
+
+# Wait for all threads to finish
+fib_thread.join()
+sq_thread.join()
+cube_thread.join()
+
+

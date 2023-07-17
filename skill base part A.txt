@@ -1,0 +1,75 @@
+q 1
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
+
+#define NUMBER_CHILD 3
+
+int main() {
+    int child_pids[NUMBER_CHILD];
+    int parent_to_child[NUMBER_CHILD][2];
+    char parent_message[256];
+    char child_message[256];
+
+    printf("Parent process started.\n");
+
+    // Create pipes for communication between parent and children
+    for (int i = 0; i < NUMBER_CHILD; i++) {
+        if (pipe(parent_to_child[i]) == -1) {
+            perror("pipe");
+            exit(1);
+        }
+    }
+
+    // Fork child processes
+    for (int i = 0; i < NUMBER_CHILD; i++) {
+        pid_t child_pid = fork();
+
+        if (child_pid == -1) {
+            perror("fork");
+            exit(1);
+        } else if (child_pid == 0) {
+            // Child process
+            close(parent_to_child[i][1]);  
+
+        
+            read(parent_to_child[i][0], child_message, sizeof(child_message));
+            printf("Child %d received message: %s\n", i + 1, child_message);
+
+            close(parent_to_child[i][0]);  
+            exit(0);
+        } else {
+            // Parent process
+            child_pids[i] = child_pid;
+            close(parent_to_child[i][0]);  
+        }
+    }
+
+    
+    for (int i = 0; i < NUMBER_CHILD; i++) {
+        printf("Enter message to send to child %d: ", i + 1);
+        fgets(parent_message, sizeof(parent_message), stdin);
+        parent_message[strlen(parent_message) - 1] = '\0'; 
+
+        
+        write(parent_to_child[i][1], parent_message, strlen(parent_message) + 1);
+        close(parent_to_child[i][1]);  
+    }
+
+   
+    for (int i = 0; i < NUMBER_CHILD; i++) {
+        waitpid(child_pids[i], NULL, 0);
+    }
+
+    printf("Parent process finished.\n");
+
+    return 0;
+}
+
+
+
+
+
